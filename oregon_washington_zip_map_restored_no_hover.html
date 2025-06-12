@@ -1,0 +1,557 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Oregon & Washington ZIP Code Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    #map { height: 100vh; width: 100%; }
+    .leaflet-control-layers-expanded {
+      background-color: white;
+      padding: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+
+  <script>
+    var map = L.map('map').setView([45.5, -120.5], 6);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    function createZipLayer(url, styleFn, featureFn) {
+      return new L.GeoJSON.AJAX(url, {
+        style: styleFn,
+        onEachFeature: featureFn
+      });
+    }
+
+    function addLabelToLayer(layerGroup, zip, center) {
+      const label = L.marker(center, {
+        icon: L.divIcon({
+          className: 'zip-label',
+          html: `<div style='font-size: 12px; font-weight: bold;'>${zip}</div>`
+        })
+      });
+      layerGroup.addLayer(label);
+    }
+
+    var overlays = {};
+    var deliveryLabels = L.layerGroup();
+    overlays["ZIP Code Labels"] = deliveryLabels;
+
+    var homeDeliveryData = {
+  "97003": 156,
+  "97004": 38,
+  "97005": 254,
+  "97006": 375,
+  "97007": 486,
+  "97008": 477,
+  "97009": 121,
+  "97013": 297,
+  "97015": 172,
+  "97019": 26,
+  "97022": 15,
+  "97023": 68,
+  "97024": 92,
+  "97027": 145,
+  "97030": 367,
+  "97034": 655,
+  "97035": 604,
+  "97038": 66,
+  "97042": 28,
+  "97045": 628,
+  "97055": 125,
+  "97060": 180,
+  "97062": 371,
+  "97068": 535,
+  "97070": 377,
+  "97071": 7,
+  "97078": 161,
+  "97080": 515,
+  "97086": 315,
+  "97089": 191,
+  "97113": 78,
+  "97115": 34,
+  "97116": 279,
+  "97123": 411,
+  "97124": 425,
+  "97128": 369,
+  "97132": 258,
+  "97140": 268,
+  "97201": 358,
+  "97202": 709,
+  "97203": 255,
+  "97204": 23,
+  "97205": 113,
+  "97206": 501,
+  "97209": 138,
+  "97210": 244,
+  "97211": 363,
+  "97212": 670,
+  "97213": 524,
+  "97214": 351,
+  "97215": 343,
+  "97216": 236,
+  "97217": 351,
+  "97218": 147,
+  "97219": 952,
+  "97220": 274,
+  "97221": 391,
+  "97222": 598,
+  "97223": 715,
+  "97224": 682,
+  "97225": 665,
+  "97227": 35,
+  "97229": 1013,
+  "97230": 572,
+  "97231": 64,
+  "97232": 265,
+  "97233": 176,
+  "97236": 269,
+  "97239": 397,
+  "97266": 176,
+  "97267": 593,
+  "97401": 11,
+  "97402": 5,
+  "97403": 3,
+  "97404": 12,
+  "97405": 10,
+  "97408": 2,
+  "97477": 1,
+  "97478": 1,
+  "97002": 92,
+  "97020": 5,
+  "97032": 6,
+  "97101": 9,
+  "97106": 43,
+  "97109": 1,
+  "97111": 23,
+  "97114": 27,
+  "97117": 3,
+  "97119": 10,
+  "97127": 10,
+  "97133": 40,
+  "97137": 15,
+  "97148": 31
+};
+    var onlineDeliveryData = {
+  "97003": 58,
+  "97004": 17,
+  "97005": 71,
+  "97006": 145,
+  "97007": 219,
+  "97008": 155,
+  "97009": 24,
+  "97013": 100,
+  "97014": 1,
+  "97015": 65,
+  "97016": 1,
+  "97017": 10,
+  "97019": 14,
+  "97022": 8,
+  "97023": 23,
+  "97024": 30,
+  "97027": 46,
+  "97030": 72,
+  "97031": 15,
+  "97034": 297,
+  "97035": 255,
+  "97038": 23,
+  "97042": 8,
+  "97045": 223,
+  "97048": 8,
+  "97055": 61,
+  "97056": 123,
+  "97058": 15,
+  "97060": 51,
+  "97062": 151,
+  "97068": 277,
+  "97070": 185,
+  "97071": 66,
+  "97078": 36,
+  "97080": 140,
+  "97086": 182,
+  "97089": 54,
+  "97103": 18,
+  "97110": 4,
+  "97113": 14,
+  "97115": 20,
+  "97116": 65,
+  "97122": 1,
+  "97123": 129,
+  "97124": 167,
+  "97128": 111,
+  "97130": 6,
+  "97132": 106,
+  "97135": 4,
+  "97136": 6,
+  "97138": 16,
+  "97140": 122,
+  "97141": 14,
+  "97146": 8,
+  "97201": 185,
+  "97202": 313,
+  "97203": 47,
+  "97204": 19,
+  "97205": 74,
+  "97206": 122,
+  "97208": 1,
+  "97209": 119,
+  "97210": 142,
+  "97211": 126,
+  "97212": 298,
+  "97213": 217,
+  "97214": 125,
+  "97215": 136,
+  "97216": 43,
+  "97217": 93,
+  "97218": 35,
+  "97219": 425,
+  "97220": 74,
+  "97221": 172,
+  "97222": 129,
+  "97223": 267,
+  "97224": 271,
+  "97225": 301,
+  "97227": 17,
+  "97229": 466,
+  "97230": 138,
+  "97231": 64,
+  "97232": 102,
+  "97233": 27,
+  "97236": 63,
+  "97239": 222,
+  "97266": 36,
+  "97267": 152,
+  "97301": 42,
+  "97302": 117,
+  "97303": 50,
+  "97304": 71,
+  "97305": 16,
+  "97306": 49,
+  "97317": 13,
+  "97321": 15,
+  "97322": 3,
+  "97325": 4,
+  "97330": 34,
+  "97333": 7,
+  "97338": 15,
+  "97341": 4,
+  "97351": 11,
+  "97355": 6,
+  "97361": 10,
+  "97365": 12,
+  "97367": 7,
+  "97370": 5,
+  "97376": 3,
+  "97378": 7,
+  "97381": 30,
+  "97383": 7,
+  "97386": 1,
+  "97392": 6,
+  "97394": 5,
+  "97396": 1,
+  "97401": 15,
+  "97402": 4,
+  "97403": 3,
+  "97404": 7,
+  "97405": 23,
+  "97408": 8,
+  "97411": 1,
+  "97420": 5,
+  "97423": 1,
+  "97424": 1,
+  "97439": 8,
+  "97444": 5,
+  "97458": 2,
+  "97459": 2,
+  "97465": 1,
+  "97467": 1,
+  "97470": 6,
+  "97471": 4,
+  "97477": 3,
+  "97478": 6,
+  "97487": 1,
+  "97501": 8,
+  "97502": 5,
+  "97504": 18,
+  "97524": 1,
+  "97526": 6,
+  "97527": 2,
+  "97535": 4,
+  "97536": 1,
+  "97540": 4,
+  "97601": 5,
+  "97701": 11,
+  "97702": 15,
+  "97703": 20,
+  "97707": 8,
+  "97720": 2,
+  "97739": 1,
+  "97741": 2,
+  "97754": 2,
+  "97756": 16,
+  "97759": 10,
+  "97760": 1,
+  "97801": 19,
+  "97814": 4,
+  "97836": 2,
+  "97838": 4,
+  "97850": 2,
+  "97882": 1,
+  "97914": 1,
+  "97002": 28,
+  "97011": 7,
+  "97018": 37,
+  "97021": 3,
+  "97026": 1,
+  "97032": 9,
+  "97033": 1,
+  "97040": 2,
+  "97041": 3,
+  "97049": 18,
+  "97051": 111,
+  "97053": 45,
+  "97054": 4,
+  "97063": 1,
+  "97065": 2,
+  "97067": 17,
+  "97101": 4,
+  "97106": 19,
+  "97107": 1,
+  "97111": 12,
+  "97112": 4,
+  "97114": 6,
+  "97117": 1,
+  "97118": 2,
+  "97119": 16,
+  "97127": 6,
+  "97131": 2,
+  "97133": 18,
+  "97134": 1,
+  "97137": 3,
+  "97143": 1,
+  "97145": 2,
+  "97148": 11,
+  "97149": 9,
+  "97207": 1,
+  "97240": 1,
+  "97269": 2,
+  "97280": 1,
+  "97286": 1,
+  "97293": 1,
+  "97324": 1,
+  "97339": 2,
+  "97347": 3,
+  "97352": 2,
+  "97358": 1,
+  "97360": 1,
+  "97362": 6,
+  "97364": 2,
+  "97366": 3,
+  "97368": 1,
+  "97375": 2,
+  "97380": 1,
+  "97385": 2,
+  "97388": 3,
+  "97391": 3,
+  "97415": 4,
+  "97440": 1,
+  "97489": 1,
+  "97495": 1,
+  "97498": 3,
+  "97499": 1,
+  "97520": 29,
+  "97525": 2,
+  "97530": 3,
+  "97534": 1,
+  "97603": 1,
+  "97624": 2,
+  "97730": 2,
+  "97734": 1,
+  "97753": 3,
+  "97810": 1,
+  "97813": 1,
+  "97823": 1,
+  "97826": 1,
+  "97835": 1,
+  "97846": 1,
+  "97857": 1,
+  "97862": 2,
+  "97864": 2,
+  "97868": 1,
+  "98004": 1,
+  "98010": 1,
+  "98032": 1,
+  "98040": 1,
+  "98104": 2,
+  "98109": 2,
+  "98116": 2,
+  "98117": 1,
+  "98155": 1,
+  "98274": 1,
+  "98356": 1,
+  "98501": 2,
+  "98504": 2,
+  "98516": 1,
+  "98527": 1,
+  "98532": 1,
+  "98542": 1,
+  "98577": 1,
+  "98584": 1,
+  "98596": 1,
+  "98604": 27,
+  "98606": 17,
+  "98607": 39,
+  "98610": 1,
+  "98612": 1,
+  "98620": 4,
+  "98624": 1,
+  "98626": 2,
+  "98629": 6,
+  "98632": 11,
+  "98635": 3,
+  "98640": 4,
+  "98642": 22,
+  "98660": 14,
+  "98661": 42,
+  "98662": 28,
+  "98663": 20,
+  "98664": 40,
+  "98665": 29,
+  "98671": 26,
+  "98672": 7,
+  "98674": 4,
+  "98675": 4,
+  "98682": 26,
+  "98683": 54,
+  "98684": 21,
+  "98685": 37,
+  "98686": 25,
+  "98687": 1,
+  "98843": 1
+};
+
+    function deliveryStyle(zipData, color) {
+      return function (feature) {
+        const zip = feature.properties.ZCTA5CE10;
+        return zipData[zip] ? { color: "#000", weight: 2, fillColor: color, fillOpacity: 0.6 } : { weight: 0, fillOpacity: 0 };
+      };
+    }
+
+    function deliveryFeature(zipData, labelGroup, labelText) {
+      return function (feature, layer) {
+        const zip = feature.properties.ZCTA5CE10;
+        if (zipData[zip]) {
+          layer.bindPopup(`ZIP Code: ${zip}<br>${labelText}: ${zipData[zip]}`);
+          addLabelToLayer(labelGroup, zip, layer.getBounds().getCenter());
+        }
+      };
+    }
+
+    var orLayer = createZipLayer("https://raw.githubusercontent.com/OpenDataDE/State-zip-code-GeoJSON/master/or_oregon_zip_codes_geo.min.json",
+      () => ({ color: "#000000", weight: 3, fillOpacity: 0 }),
+      (feature, layer) => {
+        const zip = feature.properties.ZCTA5CE10;
+        layer.bindPopup("ZIP Code: " + zip);
+      }
+    );
+
+    var waLayer = createZipLayer("https://raw.githubusercontent.com/OpenDataDE/State-zip-code-GeoJSON/master/wa_washington_zip_codes_geo.min.json",
+      () => ({ color: "#000000", weight: 3, fillOpacity: 0 }),
+      (feature, layer) => {
+        const zip = feature.properties.ZCTA5CE10;
+        layer.bindPopup("ZIP Code: " + zip);
+      }
+    );
+
+    orLayer.on('data:loaded', () => {
+      orLayer.eachLayer(layer => {
+        // removed boundary layer
+        const zip = layer.feature.properties.ZCTA5CE10;
+        layer.bindPopup("ZIP Code: " + zip);
+});
+    });
+
+    waLayer.on('data:loaded', () => {
+      waLayer.eachLayer(layer => {
+        // removed boundary layer
+        const zip = layer.feature.properties.ZCTA5CE10;
+        layer.bindPopup("ZIP Code: " + zip);
+});
+      map.addLayer(deliveryLabels);
+    });
+
+    map.addLayer(orLayer);
+    map.addLayer(waLayer);
+
+    var homeDeliveryLayer = createZipLayer(
+      "https://raw.githubusercontent.com/OpenDataDE/State-zip-code-GeoJSON/master/or_oregon_zip_codes_geo.min.json",
+      deliveryStyle(homeDeliveryData, "#0074D9"),
+      deliveryFeature(homeDeliveryData, deliveryLabels, "Home Delivery")
+    );
+
+    var onlineDeliveryLayer = createZipLayer(
+      "https://raw.githubusercontent.com/OpenDataDE/State-zip-code-GeoJSON/master/or_oregon_zip_codes_geo.min.json",
+      deliveryStyle(onlineDeliveryData, "#2ECC40"),
+      deliveryFeature(onlineDeliveryData, deliveryLabels, "Online Delivery")
+    );
+
+    homeDeliveryLayer.on('data:loaded', () => {
+      
+    });
+    onlineDeliveryLayer.on('data:loaded', () => {
+      
+    });
+
+    
+    
+
+    
+    function loadDeliveryLayer(url, zipData, color, labelText, labelGroup, targetGroup) {
+      var layer = createZipLayer(url, deliveryStyle(zipData, color), deliveryFeature(zipData, labelGroup, labelText));
+      layer.on('data:loaded', () => {
+        layer.eachLayer(l => targetGroup.addLayer(l));
+      });
+      return layer;
+    }
+
+    var homeDeliveryGroup = L.layerGroup();
+    var onlineDeliveryGroup = L.layerGroup();
+
+    loadDeliveryLayer(
+      "https://raw.githubusercontent.com/OpenDataDE/State-zip-code-GeoJSON/master/or_oregon_zip_codes_geo.min.json",
+      homeDeliveryData, "#0074D9", "Home Delivery", deliveryLabels, homeDeliveryGroup
+    );
+    loadDeliveryLayer(
+      "https://raw.githubusercontent.com/OpenDataDE/State-zip-code-GeoJSON/master/wa_washington_zip_codes_geo.min.json",
+      homeDeliveryData, "#0074D9", "Home Delivery", deliveryLabels, homeDeliveryGroup
+    );
+    loadDeliveryLayer(
+      "https://raw.githubusercontent.com/OpenDataDE/State-zip-code-GeoJSON/master/or_oregon_zip_codes_geo.min.json",
+      onlineDeliveryData, "#2ECC40", "Online Delivery", deliveryLabels, onlineDeliveryGroup
+    );
+    loadDeliveryLayer(
+      "https://raw.githubusercontent.com/OpenDataDE/State-zip-code-GeoJSON/master/wa_washington_zip_codes_geo.min.json",
+      onlineDeliveryData, "#2ECC40", "Online Delivery", deliveryLabels, onlineDeliveryGroup
+    );
+
+    overlays["Home Delivery ZIPs"] = homeDeliveryGroup;
+    overlays["Online Delivery ZIPs"] = onlineDeliveryGroup;
+
+    map.addLayer(homeDeliveryGroup);
+    map.addLayer(onlineDeliveryGroup);
+
+L.control.layers(null, overlays, { collapsed: false }).addTo(map);
+  </script>
+</body>
+</html>
